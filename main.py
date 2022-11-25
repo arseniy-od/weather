@@ -1,11 +1,15 @@
 import geocoder
 import requests
-from collections import namedtuple
+from typing import NamedTuple
+from datetime import datetime
 
-Coords = namedtuple('Coords', 'latitude longitude')
+
+class Coords(NamedTuple):
+    latitude: float
+    longitude: float
 
 
-def get_gps_coordinates() -> Coords:
+def get_coordinates() -> Coords:
     """Returns current coordinates using ip"""
     g = geocoder.ip('me')
     try:
@@ -16,18 +20,22 @@ def get_gps_coordinates() -> Coords:
     return Coords(lat, lng)
 
 
-def get_weather(coordinates):
+def get_weather(coordinates: Coords):
     latitude, longitude = coordinates.latitude, coordinates.longitude
-    url_api = "https://api.open-meteo.com/v1/forecast?latitude={0}&longitude={1}&current_weather=true"
+    url_api = "https://api.open-meteo.com/v1/forecast?latitude={0}&longitude={1}&current_weather=true" \
+              "&timeformat=unixtime&timezone=Africa%2FCairo"
     weather_dict = requests.get(url_api.format(latitude, longitude)).json()
     return weather_dict
 
 
 def weather_formatter():
-    coords = get_gps_coordinates()
+    coords = get_coordinates()
     weather_dict = get_weather(coords)
-    current_temperature = weather_dict['current_weather']['temperature']
-    return f'Current temperature is {current_temperature} degrees Celsium'
+    print(weather_dict)
+    current_temperature = round(weather_dict['current_weather']['temperature'])
+    dt = datetime.fromtimestamp(weather_dict['current_weather']['time'])
+    dt_str = dt.strftime("%d %b %Y - %H:%M")
+    return f'Temperature at {dt_str} is {current_temperature} degrees Celsium'
 
 
 if __name__ == "__main__":
