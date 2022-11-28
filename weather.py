@@ -1,4 +1,4 @@
-#!usr/bin/env python
+
 from weather_formatter import weather_formatter
 from coordinates import get_coordinates
 from get_weather import get_weather

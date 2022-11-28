@@ -1,5 +1,6 @@
 import geocoder
 from typing import NamedTuple
+from exceptions import CantGetCoordinates
 
 
 class Coords(NamedTuple):
@@ -11,13 +12,8 @@ class Coords(NamedTuple):
 def get_coordinates() -> Coords:
     """Returns current coordinates using ip"""
     g = geocoder.ip('me')
-    try:
-        lat, lng = g.latlng
-        city = g.city
-    except TypeError as e:
-        print("Cannot get coordinates from ip. Check your Internet connection")
-        raise e
+    if g.error:
+        raise CantGetCoordinates("Cannot get coordinates from ip. Check your Internet connection")
+    lat, lng = g.latlng
+    city = g.city
     return Coords(lat, lng, city)
-
-
-get_coordinates()
