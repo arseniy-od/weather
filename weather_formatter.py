@@ -2,7 +2,7 @@ from get_weather import Weather, get_weather
 
 WEATHER_TEMPLATE = """
 Temperature is {0} degrees Celsium
-Weather type is {1}
+Weather type is "{1}"
 Sunrise is at {2}
 Sunset is at {3}
 City: {4}
