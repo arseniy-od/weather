@@ -1,3 +1,6 @@
 class CantGetCoordinates(Exception):
     """Program can't get current coordinates"""
-    pass
+
+
+class ApiServiceError(Exception):
+    """Program can't get data from api service"""

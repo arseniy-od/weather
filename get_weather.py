@@ -1,7 +1,13 @@
-import requests
+import urllib.request
+import json
+from json.decoder import JSONDecodeError
+from urllib.error import URLError
 from typing import NamedTuple
 from datetime import datetime
-from coordinates import Coords
+
+import config
+from coordinates import Coords, get_city
+from exceptions import ApiServiceError
 
 
 weather_type_codes = {
@@ -35,7 +41,6 @@ weather_type_codes = {
     99: 'Thunderstorm with heavy hail'
 }
 
-
 Celsium = int
 
 
@@ -49,12 +54,8 @@ class Weather(NamedTuple):
 
 def get_weather(coordinates: Coords) -> Weather:
     """Calls open-meteo.com api to get weather data using coordinates"""
-    latitude, longitude = coordinates.latitude, coordinates.longitude
-    url_api = 'https://api.open-meteo.com/v1/forecast?latitude={0}&longitude={1}&daily=sunrise,sunset' \
-              '&current_weather=true&timeformat=unixtime&timezone=Africa%2FCairo'
-    weather_dict = requests.get(url_api.format(latitude, longitude)).json()
-
-    city = coordinates.city
+    weather_dict = _parse_openmeteo_response(_get_openmeteo_response(coordinates))
+    city = get_city()
     current_temperature = round(weather_dict['current_weather']['temperature'])
     weather_code = weather_dict['current_weather']['weathercode']
     weather_type = weather_type_codes[weather_code]
@@ -68,3 +69,20 @@ def get_weather(coordinates: Coords) -> Weather:
     weather = Weather(current_temperature, weather_type, sunrise_dt, sunset_dt, city)
 
     return weather
+
+
+def _get_openmeteo_response(coordinates: Coords) -> bytes:
+    latitude, longitude = coordinates.latitude, coordinates.longitude
+    try:
+        response = urllib.request.urlopen(config.URL_API.format(latitude=latitude, longitude=longitude)).read()
+    except URLError:
+        raise ApiServiceError
+    return response
+
+
+def _parse_openmeteo_response(weather_dict_raw: bytes) -> dict:
+    try:
+        weather_dict = json.loads(weather_dict_raw)
+    except JSONDecodeError:
+        raise ApiServiceError
+    return weather_dict
